@@ -15,7 +15,7 @@ class ChairController extends Controller
      */
     public function validateChair($id)
     {
-        return !Chair::where('id', $id)->first()->reservation_id?'true':'false';
+        return !Chair::where('id', $id)->first()->reservation_id?1:0;
     }
     
     /**

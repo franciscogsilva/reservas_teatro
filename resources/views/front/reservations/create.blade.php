@@ -6,13 +6,25 @@
             <div class="col col-lg-12 col-home">
                 <h1>{{ env('APP_NAME') }}</h1>
                 @include('layouts.partials._messages')
-                {!! Form::open(['route' => 'reservations.store', 'method' => 'POST']) !!}
+                @if(isset($reservation))
+                    {!! Form::open(['route' => ['reservations.update', $reservation->id], 'method' => 'PUT', 'id' => 'form-update']) !!}
+                    <?php 
+                        $array = $reservation->chairs()->pluck('id')->toArray();
+                    ?>
+                @else 
+                    {!! Form::open(['route' => 'reservations.store', 'method' => 'POST']) !!}
+                @endif
                     <div class="form-group">
+                        <h5>{{isset($reservation)?'Editar Reserva':'Crear Reservar'}}</h5>
                         <label for="exampleFormControlSelect1">Número de Personas</label>
                         <select id="numPersons" name="numPersons" class="form-control" id="exampleFormControlSelect1">
                             <option value="" selected disabled>Selecciona el número de personas</option>
                             @for($i=1; $i<=$chairs->where('reservation_id', null)->count(); $i++)
-                                <option value="{{ $i }}">{{ $i }}</option>
+                                @if(isset($reservation))
+                                    <option value="{{ $i }}" {{$i==$reservation->num_persons?'selected':''}}>{{ $i }}</option>
+                                @else
+                                    <option value="{{ $i }}">{{ $i }}</option>
+                                @endif
                                 option
                             @endfor
                         </select>
@@ -28,7 +40,7 @@
                                                     $chair = $chairs->where('row', $row)->where('column', $column)->first();
                                                 ?>
                                                 <td>
-                                                    <a class="chair-container {{ !$chair->reservation_id?'chair-free':'chair-taken disabled' }}" id="chair_{{ $chair->id }}" onclick="validateChair('{{ $chair->id }}')">
+                                                    <a class="chair-container {{ !$chair->reservation_id?'chair-free':(isset($reservation)?(in_array($chair->id, $array)?'my-chair':'chair-taken'):'chair-taken') }}" id="chair_{{ $chair->id }}" onclick="validateChair('{{ $chair->id }}')">
                                                         <i class="fas fa-chair"></i>
                                                     </a>
                                                 </td>
@@ -39,7 +51,7 @@
                             </div>                            
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success mb-2 btn-lg" id="btn-sub" disabled>Reservar</button>
+                    <button type="submit" class="btn btn-success mb-2 btn-lg" id="btn-sub" disabled>{{isset($reservation)?'Editar Reserva':'Reservar'}}</button>
                 {!! Form::close() !!}
             </div>
         </div>
@@ -48,11 +60,31 @@
 
 @section('js')
     <script type="text/javascript">
-        var numPersons = null;
+        var numPersons = "{{isset($reservation)}}"?$("#numPersons :selected").val():null;
         var selectedChairs = new Array();
+
+        if("{{isset($reservation)}}"){
+            $("#btn-sub").prop("disabled", false);
+            var new_array = new Array();
+            <?php
+                if(isset($reservation)){ 
+                    foreach($array as $val){ ?>
+                        new_array.push('<?php echo $val; ?>');
+            <?php }} ?>
+        }
+
         $('select').on('change', function() {
             numPersons = $("#numPersons :selected").val();
             setChairs();
+        });
+
+        $('#form-update').on('submit', function(){
+            console.log(new_array)
+            if(numPersons>0){
+                for (var i=0; i<new_array.length; i++){                    
+                    $("#selectedChairs").append('<input type="hidden" name="selectedChairs[]" value="'+new_array[i]+'">');
+                }
+           }
         });
 
         function validateChair(id){
@@ -64,7 +96,7 @@
                         method  : 'GET',
                         url     : "{{ url('validate-chair') }}/"+id,
                         success : function(data) {
-                            if(data = 'true'){
+                            if($.trim(data) == 1){
                                 $("#chair_"+id).removeClass( "chair-free" ).addClass( "chair-waiting" );
                                 $("#selectedChairs").append('<input type="hidden" name="selectedChairs[]" value="'+id+'">');
                                 numPersons--;
@@ -72,8 +104,18 @@
                                     $("#btn-sub").prop("disabled", false);
                                 }
                             }else{
-                                $("#chair_"+id).removeClass( "chair-free" ).addClass( "chair-taken disabled" );
-                                alert('La silla seleccionada fue reserva ya, intentalo de nuevo con otra.');
+                                if("{{isset($reservation)}}"){
+                                    if(new_array.includes(id)){
+                                        new_array.splice(new_array.indexOf(id), 1);                                        
+                                        $("#chair_"+id).removeClass( "my-chair" ).addClass( "chair-free" );
+                                    }else{
+                                        $("#chair_"+id).removeClass( "chair-free" ).addClass( "chair-taken disabled" );
+                                        alert('La silla seleccionada fue reserva ya, intentalo de nuevo con otra.');
+                                    }
+                                }else{
+                                    $("#chair_"+id).removeClass( "chair-free" ).addClass( "chair-taken disabled" );
+                                    alert('La silla seleccionada fue reserva ya, intentalo de nuevo con otra.');
+                                }
                             }
                         },
                         error : function(request, error) {
@@ -97,8 +139,8 @@
                 url     : "{{ url('get-chairs') }}",
                 success : function(data) {
                     data.forEach(function(chair){
-                        $('#chair_'+chair.id).removeClass("chair-free chair-taken disabled chair-waiting");
-                        $('#chair_'+chair.id).addClass(chair.reservation_id==null?'chair-free':'chair-taken disabled');
+                        $('#chair_'+chair.id).removeClass("chair-free chair-taken disabled chair-waiting my-chair");
+                        $('#chair_'+chair.id).addClass(chair.reservation_id==null?'chair-free':(chair.reservation_id=="{{$reservation->id}}"?'my-chair':'chair-taken disabled'));
                     });
                 },
                 error : function(request, error) {

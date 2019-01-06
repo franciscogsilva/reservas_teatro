@@ -69,7 +69,7 @@ class ReservationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id){        
+    public function show($id){
         try {
             $reservation = Reservation::findOrFail($id);            
         }catch (ModelNotFoundException $e){
@@ -89,9 +89,19 @@ class ReservationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function edit($id){
+        try {
+            $reservation = Reservation::findOrFail($id);            
+        }catch (ModelNotFoundException $e){
+            $errors = collect(['La Reserva con ID '.$id.' no se encuentra.']);
+            return back()
+                ->withInput()
+                ->with('errors', $errors);
+        }
+
+        return view('front.reservations.create')
+            ->with('chairs', Chair::orderBy('id', 'ASC')->get())
+            ->with('reservation', $reservation);
     }
 
     /**
@@ -103,14 +113,28 @@ class ReservationController extends Controller
      */
     public function update(Request $request, $id)
     {
+        try {
+            $reservation = Reservation::findOrFail($id);            
+        }catch (ModelNotFoundException $e){
+            $errors = collect(['La Reserva con ID '.$id.' no se encuentra.']);
+            return back()
+                ->withInput()
+                ->with('errors', $errors);
+        }
+
         $this->validate($request, $this->getValidationRules($request), $this->getValidationMessages($request));
 
-        if($request->selectedChairs->count() != $request->numPersons){            
+        if(count($request->selectedChairs) != $request->numPersons){            
             $errors = collect(['El númerro de sillas seleccionadas y el número de personas no son iguales.']);
             return back()
                 ->withInput()
                 ->with('errors', $errors);
         }
+
+        $this->setReservation($reservation, $request);
+
+        return redirect()->route('reservations.index')
+            ->with('session_msg', 'Se ha editado correctamente la reserva.');
     }
 
     /**
@@ -121,7 +145,24 @@ class ReservationController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+            $reservation = Reservation::findOrFail($id);            
+        }catch (ModelNotFoundException $e){
+            $errors = collect(['La Reserva con ID '.$id.' no se encuentra.']);
+            return back()
+                ->withInput()
+                ->with('errors', $errors);
+        }
+
+        foreach($reservation->chairs as $chair){
+            $chair->reservation_id = null;
+            $chair->save();
+        }
+
+        $reservation->delete();
+
+        return redirect()->route('reservations.index')
+            ->with('session_msg', 'Se ha Eliminado correctamente la reserva.');
     }
 
     private function setReservation($reservation, $request){
@@ -129,6 +170,7 @@ class ReservationController extends Controller
         $reservation->user_id = Auth::user()->id;
         $reservation->save();
 
+        //Clean unselected chairs
         if($reservation->chairs->count()>0){
             foreach ($reservation->chairs as $chair){
                 if(!in_array($chair->id, $request->selectedChairs)){
@@ -138,8 +180,15 @@ class ReservationController extends Controller
             }
         }
 
+        //Add new select chairs
         foreach($request->selectedChairs as $selected){
             $chair = Chair::where('id', $selected)->first();
+            if($chair->reservation_id && $chair->reservation_id != $reservation->id){            
+                $errors = collect(['La silla #'.$chair->id.', ubicada en la Fila '.$chair->row.' y Columna '.$chair->column.' ya se encuentra reservada, por favor verificar.']);
+                return back()
+                    ->withInput()
+                    ->with('errors', $errors);
+            }
             $chair->reservation_id = $reservation->id;
             $chair->save();
             

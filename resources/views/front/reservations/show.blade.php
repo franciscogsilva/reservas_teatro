@@ -30,7 +30,8 @@
                     </tbody>
                 </table>
                 <br>
-                <a href="{{ route('welcome') }}" class="btn btn-secondary">Ir a Inicio</a>
+                <a href="{{ route('reservations.destroy', $reservation->id) }}" class="btn btn-danger" onclick="return confirm('¿Desea borrar la reserva?')">Eliminar</a>
+                <a href="{{ route('reservations.index') }}" class="btn btn-secondary">Ver Todas</a>
                 <a href="{{ route('reservations.edit', $reservation->id) }}" class="btn btn-success">Editar</a>
             </div>
         </div>

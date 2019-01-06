@@ -8,6 +8,8 @@
                 @include('layouts.partials._messages')
                 <h4>Reservaciones de {{ Auth::user()->name }}</h4>
                 <br>
+                <a href="{{ route('reservations.create') }}" class="btn btn-primary float-right">Crear Nueva</a>
+                <br>
                 <table class="table">
                     <thead>
                         <tr>
@@ -23,7 +25,8 @@
                                 <td>{{ $reservation->num_persons }}</td>
                                 <td>{{ $reservation->created_at != null ? ucwords($reservation->created_at->format('F d\\, Y')) : ' Sin Fecha ' }}</td>
                                 <td>
-                                    <a href="{{ route('reservations.destroy', $reservation->id) }}" class="btn btn-danger">Eliminar</a>
+                                    <a href="{{ route('reservations.destroy', $reservation->id) }}" class="btn btn-danger" onclick="return confirm('¿Desea borrar la reserva?')">Eliminar</a>
+                                    <a href="{{ route('reservations.show', $reservation->id) }}" class="btn btn-info">Revisar</a>
                                     <a href="{{ route('reservations.edit', $reservation->id) }}" class="btn btn-success">Editar</a>
                                 </td>
                             </tr>
