@@ -1,6 +1,9 @@
 
 
 <?php
+
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
     
     /**
      * Create chairs in database.
@@ -21,4 +24,11 @@
         }
 
         return App\Chair::orderBy('id', 'ASC')->get();
+    }
+
+    function setLog($log, $title){
+        \Log::info($log);
+        
+        $logFile = $title.'_'.Carbon::now()->format('Ymd_His').'.txt';
+        Storage::disk('local')->put($logFile, print_r($log, true));
     }

@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Chair;
 use App\Reservation;
 use Auth;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Log;
 
 class ReservationController extends Controller
 {
@@ -57,7 +60,20 @@ class ReservationController extends Controller
         }
 
         $reservation = new Reservation();
-        $this->setReservation($reservation, $request);
+        $reservation = $this->setReservation($reservation, $request);
+
+        $log = [
+            'model_name' => 'Reservation',
+            'reservation_id' => $reservation->id,
+            'user_id' => Auth::user()->id,
+            'accion_realizada' => 'Se creo el registro',
+            'reservation_created_at' => $reservation->created_at,
+            'reservation_updated_at' => $reservation->updated_at,
+            'log_date' => Carbon::now()
+        ];
+
+        //function defined to save log file
+        setLog($log, 'reservation_stored');
 
         return redirect()->route('reservations.show', $reservation->id)
             ->with('session_msg', 'Se ha creado correctamente la reserva.');
@@ -131,7 +147,20 @@ class ReservationController extends Controller
                 ->with('errors', $errors);
         }
 
-        $this->setReservation($reservation, $request);
+        $reservation = $this->setReservation($reservation, $request);
+
+        $log = [
+            'model_name' => 'Reservation',
+            'reservation_id' => $reservation->id,
+            'user_id' => Auth::user()->id,
+            'accion_realizada' => 'Se actualizó el registro',
+            'reservation_created_at' => $reservation->created_at,
+            'reservation_updated_at' => $reservation->updated_at,
+            'log_date' => Carbon::now()
+        ];
+
+        //function defined to save log file
+        setLog($log, 'reservation_updated');
 
         return redirect()->route('reservations.index')
             ->with('session_msg', 'Se ha editado correctamente la reserva.');
@@ -194,7 +223,7 @@ class ReservationController extends Controller
             
         }
 
-        return $reservation->save();
+        return $reservation;
     }
 
     private function getValidationRules($request){
