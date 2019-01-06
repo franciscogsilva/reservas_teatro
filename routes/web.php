@@ -20,6 +20,9 @@ Route::get('/get-chairs', 'ChairController@getChairs')->name('get-chairs');
 Route::group(['middleware' => ['web','auth']], function () {
 	Route::resource('reservations', 'ReservationController');
 	Route::get('reservations/{id}/destroy', 'ReservationController@destroy')->name('reservations.destroy');
+
+	Route::get('users', 'UserController@edit')->name('users.edit');
+	Route::put('users', 'UserController@update')->name('users.update');
 });
 
 Auth::routes();

@@ -68,9 +68,12 @@
             var new_array = new Array();
             <?php
                 if(isset($reservation)){ 
-                    foreach($array as $val){ ?>
+                    foreach($array as $val){ ?>                        
+                        var reser = <?php echo $reservation->id; ?>;
                         new_array.push('<?php echo $val; ?>');
             <?php }} ?>
+        }else{
+            var reser = null;
         }
 
         $('select').on('change', function() {
@@ -79,7 +82,6 @@
         });
 
         $('#form-update').on('submit', function(){
-            console.log(new_array)
             if(numPersons>0){
                 for (var i=0; i<new_array.length; i++){                    
                     $("#selectedChairs").append('<input type="hidden" name="selectedChairs[]" value="'+new_array[i]+'">');
@@ -140,7 +142,7 @@
                 success : function(data) {
                     data.forEach(function(chair){
                         $('#chair_'+chair.id).removeClass("chair-free chair-taken disabled chair-waiting my-chair");
-                        $('#chair_'+chair.id).addClass(chair.reservation_id==null?'chair-free':(chair.reservation_id=="{{$reservation->id}}"?'my-chair':'chair-taken disabled'));
+                        $('#chair_'+chair.id).addClass(chair.reservation_id==null?'chair-free':(reser!=null?(chair.reservation_id==reser?'my-chair':'chair-taken disabled'):'chair-taken disabled'));
                     });
                 },
                 error : function(request, error) {
