@@ -1,0 +1,52 @@
+nav{
+	color: #FFF !important;
+}
+
+.row-home{
+	padding: 20px 0px;
+}
+
+.col-home{
+	text-align: center;
+}
+
+.panel-chairs{
+	margin-top: 20px;
+}
+
+.container-table{
+	padding: 0px;
+	margin: 5px 0px 5px;
+}
+
+.table-chairs{
+	width: 100%;
+}
+
+.chair-container{
+	display: block;
+	width: 100%;
+	padding: 8px 2px;
+    font-size: 32px;
+    color: #FFF !important;
+    margin: 1px;
+    cursor: pointer;
+}
+
+.chair-free{	
+    background: #40795a;
+}
+
+.chair-waiting{	
+    background: #405979;
+}
+
+.chair-taken{
+	background: #984242;
+}
+
+.btn-sent{
+    color: #fff;
+    background-color: #405979;
+    border-color: #405979;
+}
