@@ -13,8 +13,7 @@ class Reservation extends Model
     ];
 
     public function chairs(){
-        return $this->belongsToMany('App\Chair', 'chairs_has_reservations', 'reservation_id', 'chair_id')
-            ->withTimestamps();
+        return $this->hasMany('App\Chair');
     }
 
     public function user(){

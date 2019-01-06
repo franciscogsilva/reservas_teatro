@@ -17,6 +17,10 @@ class CreateChairsTable extends Migration
             $table->increments('id');
             $table->integer('row');
             $table->integer('column');
+
+            $table->integer('reservation_id')->unsigned()->nullable();
+            $table->foreign('reservation_id')->references('id')->on('reservations');
+
             $table->timestamps();
         });
     }

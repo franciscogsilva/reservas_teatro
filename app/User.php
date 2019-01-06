@@ -33,6 +33,6 @@ class User extends Authenticatable
     ];
 
     public function reservations(){
-        return $this->hasOne('App\Reservation');
+        return $this->hasMany('App\Reservation');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Chair;
 use Illuminate\Database\Eloquent\Model;
 
 class Chair extends Model
@@ -12,8 +13,7 @@ class Chair extends Model
         'column'
     ];
 
-    public function reservations(){
-        return $this->belongsToMany('App\Reservation', 'chairs_has_reservations', 'chair_id', 'reservation_id')
-            ->withTimestamps();
+    public function reservation(){
+        return $this->belongsTo('App\Reservation', 'reservation_id');
     }
 }
